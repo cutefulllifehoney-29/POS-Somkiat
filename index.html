@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมเกียรติสโตร์ POS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Custom minimalist styles -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Print styles -->
+    <link rel="stylesheet" href="print.css" media="print">
+    <!-- Tailwind Config for Minimalist Theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#111827', // Gray 900
+                        secondary: '#4b5563', // Gray 600
+                        accent: '#2563eb', // Blue 600
+                        surface: '#ffffff',
+                        background: '#f9fafb', // Gray 50
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Kanit:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-primary h-screen flex overflow-hidden">
+
+    <!-- Global Barcode Scanner Status / Hidden Input -->
+    <input type="text" id="global-barcode-input" class="opacity-0 absolute -z-10 focus:ring-0" autocomplete="off"
+        autofocus>
+
+    <!-- Sidebar / Navigation -->
+    <nav id="sidebar-nav"
+        class="sidebar-nav bg-surface border-r border-gray-200 flex flex-col justify-between hidden sm:flex z-10 shrink-0">
+        <div>
+            <div class="h-auto py-6 flex flex-col items-center justify-center border-b border-gray-100 sidebar-header">
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg shadow-blue-100 text-white flex items-center justify-center text-2xl font-bold shrink-0 mb-3 transition-transform hover:scale-110">
+                    <i class="ri-store-2-line"></i>
+                </div>
+                <h2 class="font-semibold text-xl nav-label truncate text-center w-full px-2 text-primary">
+                    สมเกียรติสโตร์</h2>
+            </div>
+            <ul class="p-2 space-y-1 mt-4">
+                <li>
+                    <button
+                        class="nav-btn active w-full flex items-center p-3 rounded-md text-secondary hover:bg-gray-50 hover:text-primary transition-colors focus:outline-none"
+                        data-view="pos">
+                        <i class="ri-shopping-bag-line text-xl shrink-0"></i>
+                        <span class="ml-3 font-medium nav-label">ขายสินค้า</span>
+                    </button>
+                </li>
+                <li>
+                    <button
+                        class="nav-btn w-full flex items-center p-3 rounded-md text-secondary hover:bg-gray-50 hover:text-primary transition-colors focus:outline-none"
+                        data-view="products">
+                        <i class="ri-archive-line text-xl shrink-0"></i>
+                        <span class="ml-3 font-medium nav-label">จัดการสต๊อก</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div>
+            <div class="p-3 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-center gap-2">
+                <i class="ri-barcode-line text-lg shrink-0"></i>
+                <span class="nav-label">ระบบพร้อมสแกน</span>
+            </div>
+            <button id="btn-toggle-sidebar"
+                class="w-full p-3 border-t border-gray-100 text-gray-400 hover:text-primary hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 focus:outline-none"
+                title="ยุบ/ขยาย เมนู">
+                <i class="ri-arrow-left-double-line text-lg sidebar-toggle-icon transition-transform"></i>
+                <span class="nav-label text-xs font-medium">ยุบเมนู</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Bottom Nav -->
+    <nav
+        class="sm:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-gray-200 flex justify-around p-2 z-50">
+        <button class="nav-btn active flex flex-col items-center p-2 text-secondary" data-view="pos">
+            <i class="ri-shopping-bag-line text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">ขายสินค้า</span>
+        </button>
+        <button class="nav-btn flex flex-col items-center p-2 text-secondary" data-view="products">
+            <i class="ri-archive-line text-xl mb-1"></i>
+            <span class="text-[10px] font-medium">จัดการสต๊อก</span>
+        </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative pb-20 sm:pb-0 overflow-hidden">
+
+        <!-- POS View -->
+        <section id="pos-view"
+            class="view-section absolute top-0 left-0 right-0 bottom-20 sm:inset-0 sm:p-4 flex flex-col lg:flex-row gap-4 active-view bg-background bg-white sm:bg-transparent">
+
+            <!-- Left: Products Catalog -->
+            <div
+                class="flex-1 min-h-[250px] flex flex-col bg-surface sm:rounded-xl sm:border border-gray-200 sm:shadow-sm overflow-hidden">
+                <!-- Search & Filter Header -->
+                <header
+                    class="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div class="relative w-full sm:w-80">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="ri-search-line text-gray-400"></i>
+                        </div>
+                        <input type="text" id="pos-search"
+                            class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-accent focus:border-accent block w-full pl-10 p-2.5 transition-colors"
+                            placeholder="ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด...">
+                    </div>
+                    <div class="flex gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-hide">
+                        <button
+                            class="category-btn active px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap bg-primary text-white transition-colors"
+                            data-category="ทั้งหมด">ทั้งหมด</button>
+                        <button
+                            class="category-btn px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap text-secondary bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+                            data-category="บริโภคภัณฑ์">บริโภคภัณฑ์</button>
+                        <button
+                            class="category-btn px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap text-secondary bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+                            data-category="เครื่องดื่ม">เครื่องดื่ม</button>
+                        <button
+                            class="category-btn px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap text-secondary bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+                            data-category="ขนมขบเคี้ยว">ขนมขบเคี้ยว</button>
+                        <button
+                            class="category-btn px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap text-secondary bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+                            data-category="ของชำทั่วไป">ของชำทั่วไป</button>
+                        <button
+                            class="category-btn px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap text-secondary bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors"
+                            data-category="ของใช้ส่วนตัว">ของใช้ส่วนตัว</button>
+                    </div>
+                </header>
+
+                <!-- Product Grid (Updated sizes: double the columns, smaller images) -->
+                <div class="flex-1 overflow-y-auto p-4 custom-scrollbar bg-gray-50/50">
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4"
+                        id="pos-product-grid">
+                        <!-- Product Cards via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Cart & Order Summary -->
+            <div
+                class="w-full lg:w-[450px] bg-surface sm:rounded-xl sm:border border-gray-200 sm:shadow-sm flex flex-col flex-[1.4] lg:flex-none lg:h-full shrink-0 border-t sm:border-t-0 overflow-hidden min-h-[350px]">
+
+                <!-- Tab Bar -->
+                <div class="tab-bar-container border-b border-gray-200 bg-gray-50 sm:rounded-t-xl">
+                    <div class="flex items-center">
+                        <div class="flex-1 flex overflow-x-auto scrollbar-hide" id="tab-bar">
+                            <!-- Tabs injected via JS -->
+                        </div>
+                        <button id="btn-add-tab"
+                            class="shrink-0 w-9 h-9 flex items-center justify-center text-gray-400 hover:text-accent hover:bg-gray-100 rounded-lg transition-colors mx-1"
+                            title="เปิด Tab ใหม่">
+                            <i class="ri-add-line text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <header class="p-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-semibold text-lg">รายการปัจจุบัน</h3>
+                </header>
+
+                <div class="flex-1 overflow-y-auto relative custom-scrollbar" id="cart-items">
+                    <!-- Cart Items injected via JS -->
+                    <div
+                        class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 space-y-2 pointer-events-none">
+                        <i class="ri-shopping-cart-line text-4xl mb-2"></i>
+                        <p class="text-sm">ตระกร้าว่างเปล่า</p>
+                    </div>
+                </div>
+
+                <div class="p-4 border-t border-gray-100 bg-gray-50 sm:rounded-b-xl">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>ยอดรวม</span>
+                        <span id="cart-subtotal">฿0.00</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600 mb-3">
+                        <span>ภาษี (7%)</span>
+                        <span id="cart-tax">฿0.00</span>
+                    </div>
+                    <div class="flex justify-between text-xl font-bold text-primary pt-3 border-t border-gray-200 mb-4">
+                        <span>ยอดสุทธิ</span>
+                        <span id="cart-total">฿0.00</span>
+                    </div>
+                    <div class="flex gap-3">
+                        <button
+                            class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 outline-none"
+                            id="btn-clear-cart">ล้างทิ้ง</button>
+                        <button
+                            class="flex-[2] bg-primary text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary focus:ring-offset-2 outline-none"
+                            id="btn-checkout" disabled>ชำระเงิน</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Management View -->
+        <section id="products-view"
+            class="view-section absolute top-0 left-0 right-0 bottom-20 sm:inset-0 sm:p-6 hidden bg-background overflow-hidden flex flex-col">
+            <div class="bg-surface rounded-xl border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+                <header class="p-5 border-b border-gray-100 flex justify-between items-center bg-white z-10">
+                    <div>
+                        <h3 class="font-semibold text-xl">ระบบคลังสินค้า</h3>
+                        <p class="text-sm text-gray-500 mt-1">จัดการรายการสินค้าบาร์โค้ดและราคา</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="relative w-64">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i class="ri-search-line text-gray-400"></i>
+                            </div>
+                            <input type="text" id="inventory-search"
+                                class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-accent focus:border-accent block w-full pl-10 p-2 transition-colors"
+                                placeholder="ค้นหาชื่อ หรือบาร์โค้ด...">
+                        </div>
+                        <button
+                            class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm flex items-center gap-2"
+                            id="btn-add-product">
+                            <i class="ri-add-line"></i> <span>เพิ่มสินค้าใหม่</span>
+                        </button>
+                    </div>
+                </header>
+
+                <div class="flex-1 overflow-auto bg-white custom-scrollbar">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 font-semibold">รูปภาพ</th>
+                                <th scope="col" class="px-6 py-4 font-semibold">รหัสบาร์โค้ด</th>
+                                <th scope="col" class="px-6 py-4 font-semibold">ชื่อสินค้า</th>
+                                <th scope="col" class="px-6 py-4 font-semibold">หมวดหมู่</th>
+                                <th scope="col" class="px-6 py-4 font-semibold">ราคา</th>
+                                <th scope="col" class="px-6 py-4 font-semibold text-right">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-gray-100">
+                            <!-- Inventory Rows via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scanner Notification Toast -->
+    <div id="scanner-toast"
+        class="fixed bottom-4 right-4 bg-primary text-white px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-y-[150%] flex items-center gap-3 z-50">
+        <i class="ri-barcode-box-line text-xl text-green-400"></i>
+        <div>
+            <p class="font-medium text-sm" id="toast-title">Scanned Title</p>
+            <p class="text-xs text-gray-300">เพิ่มรายการลงตระกร้าแล้ว</p>
+        </div>
+    </div>
+
+    <!-- Payment Calculator Modal -->
+    <div id="payment-modal"
+        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity z-[100] p-4">
+        <div class="bg-surface rounded-xl shadow-xl w-full max-w-sm transform scale-95 transition-transform duration-300 overflow-hidden"
+            id="payment-modal-panel">
+            <header class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-semibold text-lg text-primary">รับชำระเงิน</h3>
+                <button class="text-gray-400 hover:text-gray-700 transition-colors btn-close-payment"><i
+                        class="ri-close-line text-xl"></i></button>
+            </header>
+            <div class="p-6">
+                <!-- Details -->
+                <div class="mb-4 space-y-2">
+                    <div class="flex justify-between text-gray-500">
+                        <span>ยอดสุทธิที่ต้องชำระ:</span>
+                        <span id="payment-total-due" class="font-bold text-lg text-primary">฿0.00</span>
+                    </div>
+                </div>
+
+                <!-- Input (Changed from form to div to prevent reload) -->
+                <div id="payment-form">
+                    <div class="mb-6">
+                        <label class="block mb-2 text-sm font-medium text-gray-700">รับเงินมา (บาท)</label>
+                        <input type="number" id="cash-given" required min="0" step="any"
+                            class="bg-gray-50 border border-accent text-gray-900 text-2xl text-right rounded-lg focus:ring-accent focus:border-accent block w-full p-3 font-mono font-bold"
+                            placeholder="0.00" autocomplete="off">
+                    </div>
+
+                    <!-- Change Result -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-lg hidden" id="change-result-box">
+                        <div class="flex items-center justify-between text-green-600">
+                            <span class="font-medium">เงินทอนลูกค้า:</span>
+                            <span id="payment-change-amount" class="text-3xl font-bold font-mono">฿0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button"
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors btn-close-payment">ยกเลิก</button>
+                        <button type="button"
+                            class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm font-bold text-lg flex items-center justify-center gap-2"
+                            id="btn-confirm-payment">
+                            <i class="ri-printer-line"></i> คำนวณ & พิมพ์สลิป
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal (Add/Edit) -->
+    <div id="product-modal"
+        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity z-[100] p-4">
+        <div class="bg-surface rounded-xl shadow-xl w-full max-w-md transform scale-95 transition-transform duration-300 overflow-hidden"
+            id="modal-content-panel">
+            <header class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-semibold text-lg text-primary" id="modal-title">เพิ่มสินค้าใหม่</h3>
+                <button class="text-gray-400 hover:text-gray-700 transition-colors" id="btn-close-modal"><i
+                        class="ri-close-line text-xl"></i></button>
+            </header>
+            <form id="product-form" class="p-6">
+                <input type="hidden" id="product-id">
+
+                <div class="space-y-4">
+                    <div>
+                        <label
+                            class="block mb-1.5 text-sm font-medium text-gray-700 focus-within:text-accent transition-colors">รหัสบาร์โค้ด
+                            (ยิงสแกนเพื่อกรอกออโต้)</label>
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                <i class="ri-barcode-line"></i>
+                            </div>
+                            <input type="text" id="product-barcode"
+                                class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-accent focus:border-accent block w-full pl-10 p-2.5 transition-colors"
+                                placeholder="Scan or type barcode...">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block mb-1.5 text-sm font-medium text-gray-700 focus-within:text-accent transition-colors">ชื่อสินค้า
+                            *</label>
+                        <input type="text" id="product-name" required
+                            class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5 transition-colors"
+                            placeholder="เช่น น้ำดื่มกระโดด">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                class="block mb-1.5 text-sm font-medium text-gray-700 focus-within:text-accent transition-colors">ราคา
+                                (฿) *</label>
+                            <input type="number" id="product-price" required min="0" step="0.25"
+                                class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5 transition-colors"
+                                placeholder="0.00">
+                        </div>
+                        <div>
+                            <label
+                                class="block mb-1.5 text-sm font-medium text-gray-700 focus-within:text-accent transition-colors">หมวดหมู่
+                                *</label>
+                            <select id="product-category" required
+                                class="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-accent focus:border-accent block w-full p-2.5 transition-colors">
+                                <option value="เครื่องดื่ม">เครื่องดื่ม</option>
+                                <option value="ขนมขบเคี้ยว">ขนมขบเคี้ยว</option>
+                                <option value="ของชำทั่วไป">ของชำทั่วไป</option>
+                                <option value="ของใช้ส่วนตัว">ของใช้ส่วนตัว</option>
+                                <option value="บริโภคภัณฑ์">บริโภคภัณฑ์</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Section -->
+                    <div>
+                        <label class="block mb-1.5 text-sm font-medium text-gray-700">รูปภาพสินค้า</label>
+
+                        <!-- Upload Preview / Click Area -->
+                        <div id="image-upload-zone"
+                            class="relative border-2 border-dashed border-gray-200 rounded-lg p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-accent transition-colors bg-gray-50 h-28 overflow-hidden"
+                            onclick="document.getElementById('product-image-file').click()">
+                            <img id="image-preview" src="" alt=""
+                                class="hidden absolute inset-0 w-full h-full object-cover rounded-lg">
+                            <div id="image-upload-placeholder"
+                                class="flex flex-col items-center gap-1 text-gray-400 pointer-events-none">
+                                <i class="ri-image-add-line text-2xl"></i>
+                                <span class="text-xs font-medium">คลิกเพื่ออัปโหลดรูป</span>
+                                <span class="text-[10px] text-gray-300">JPG, PNG, WEBP (ไม่เกิน 5MB)</span>
+                            </div>
+                            <div id="image-uploading-indicator"
+                                class="hidden absolute inset-0 flex items-center justify-center bg-white/80">
+                                <i class="ri-loader-4-line text-2xl text-accent animate-spin"></i>
+                            </div>
+                        </div>
+
+                        <!-- Hidden File Input -->
+                        <input type="file" id="product-image-file" accept="image/*" class="hidden">
+
+                        <!-- Hidden URL input (stores the final image URL) -->
+                        <input type="hidden" id="product-image" value="">
+
+                        <!-- Fallback: manual URL -->
+                        <p class="mt-2 text-xs text-gray-400 text-center">หรือวางลิงก์รูปด้านล่าง</p>
+                        <input type="text" id="product-image-url"
+                            class="mt-1 bg-gray-50 border border-gray-200 text-gray-900 text-xs rounded-lg focus:ring-accent focus:border-accent block w-full p-2 transition-colors"
+                            placeholder="https://example.com/image.jpg">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+                    <button type="button"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        id="btn-cancel-modal">ยกเลิก</button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-gray-800 transition-colors shadow-sm">บันทึกสินค้า</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Print Template (Hidden by default, shown via print.css) -->
+    <div id="receipt-container" class="hidden">
+        <div class="text-center mb-4">
+            <h2 class="font-bold text-xl">สมเกียรติสโตร์</h2>
+            <p class="text-sm">สาขาศรีเชียงใหม่ จ.หนองคาย</p>
+            <p class="text-sm">Tel: 083-6787896</p>
+            <div class="border-t border-dashed border-black my-2"></div>
+        </div>
+        <div class="text-sm space-y-1 mb-2">
+            <!-- <div class="flex justify-between"><span class="font-mono">บิลเลขที่:</span><span class="font-mono"
+                    id="receipt-order-id"></span></div> -->
+            <div class="flex justify-between"><span class="font-mono">วันที่:</span><span class="font-mono"
+                    id="receipt-date"></span></div>
+        </div>
+        <div class="border-t border-dashed border-black my-2"></div>
+
+        <table class="w-full text-sm mb-2 text-left">
+            <thead>
+                <tr class="border-b border-black">
+                    <th class="font-normal py-1 w-3/5">รายการ</th>
+                    <th class="font-normal py-1 text-center w-1/5">จำนวน</th>
+                    <th class="font-normal py-1 text-right w-1/5">จำนวนเงิน</th>
+                </tr>
+            </thead>
+            <tbody id="receipt-items-body" class="font-mono">
+                <!-- Receipt Items -->
+            </tbody>
+        </table>
+
+        <div class="border-t border-dashed border-black my-2"></div>
+        <div class="text-sm space-y-1">
+            <div class="flex justify-between"><span>ยอดรวม:</span><span id="receipt-subtotal"></span></div>
+            <div class="flex justify-between"><span>ภาษีมูลค่าเพิ่ม (7%):</span><span id="receipt-tax"></span></div>
+            <div class="flex justify-between font-bold text-base mt-2 pt-2 border-t border-dotted border-black">
+                <span>ยอดสุทธิ:</span><span id="receipt-total"></span>
+            </div>
+
+            <div class="flex justify-between mt-2 text-[13px]"><span>รับเงินมา:</span><span id="receipt-cash"></span>
+            </div>
+            <div class="flex justify-between text-[13px]"><span>เงินทอน:</span><span id="receipt-change"></span></div>
+        </div>
+        <div class="border-t border-dashed border-black my-4"></div>
+        <div class="text-center text-sm font-mono space-y-1">
+            <p>ขอบคุณที่ใช้บริการค่ะ/ครับ</p>
+            <p class="mt-4 break-all text-[10px]" id="receipt-barcode-visual">||| | || | ||| || ||</p>
+        </div>
+    </div>
+
+    <!-- Receipt Preview Modal -->
+    <div id="receipt-preview-modal"
+        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-opacity z-[110] p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-sm transform scale-95 transition-transform duration-300 overflow-hidden flex flex-col max-h-[90vh]">
+            <header class="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                <h3 class="font-semibold text-lg text-primary flex items-center gap-2">
+                    <i class="ri-receipt-line text-accent"></i> ใบเสร็จรับเงิน
+                </h3>
+                <button class="text-gray-400 hover:text-gray-700 transition-colors" id="btn-close-receipt-preview">
+                    <i class="ri-close-line text-xl"></i>
+                </button>
+            </header>
+            <div class="flex-1 overflow-y-auto p-5 custom-scrollbar" id="receipt-preview-body">
+                <!-- Receipt clone will be injected here -->
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex gap-3 shrink-0">
+                <button type="button"
+                    class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    id="btn-receipt-close">ปิด</button>
+                <button type="button"
+                    class="flex-[2] px-4 py-2.5 text-sm font-medium text-white bg-accent rounded-lg hover:bg-blue-700 transition-colors shadow-sm flex items-center justify-center gap-2"
+                    id="btn-receipt-print">
+                    <i class="ri-printer-line"></i> พิมพ์ใบเสร็จ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

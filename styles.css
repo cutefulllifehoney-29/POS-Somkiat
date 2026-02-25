@@ -1,0 +1,240 @@
+/* 
+   Minimalist overrides and scrollbars.
+   Most styling is handled by Tailwind CSS classes in index.html.
+*/
+
+/* Custom scrollbar for modern browsers */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #e5e7eb;
+    /* gray-200 */
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    /* gray-300 */
+}
+
+/* Hide scrollbar completely if using smooth scroll utility */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* ==========================================
+   Collapsible Sidebar
+   ========================================== */
+.sidebar-nav {
+    width: 200px;
+    transition: width 0.25s ease;
+    overflow: hidden;
+}
+
+.sidebar-nav .nav-label {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar-nav .sidebar-header {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar-nav:not(.nav-collapsed) .sidebar-header {
+    justify-content: center;
+}
+
+/* Collapsed state */
+.sidebar-nav.nav-collapsed {
+    width: 64px;
+}
+
+.sidebar-nav.nav-collapsed .nav-label {
+    opacity: 0;
+    width: 0;
+    margin-left: 0;
+    pointer-events: none;
+}
+
+.sidebar-nav.nav-collapsed .sidebar-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.sidebar-nav.nav-collapsed .nav-btn {
+    justify-content: center;
+}
+
+/* Auto-collapse on medium screens */
+@media (max-width: 1023px) {
+    .sidebar-nav:not(.nav-expanded) {
+        width: 64px;
+    }
+
+    .sidebar-nav:not(.nav-expanded) .nav-label {
+        opacity: 0;
+        width: 0;
+        margin-left: 0;
+        pointer-events: none;
+    }
+
+    .sidebar-nav:not(.nav-expanded) .sidebar-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .sidebar-nav:not(.nav-expanded) .nav-btn {
+        justify-content: center;
+    }
+}
+
+
+#product-modal.show-modal,
+#payment-modal.show-modal,
+#receipt-preview-modal.show-modal {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#product-modal.show-modal #modal-content-panel,
+#payment-modal.show-modal #payment-modal-panel,
+#receipt-preview-modal.show-modal>div {
+    transform: scale(1);
+}
+
+/* Tab bar styles */
+.tab-bar-container {
+    min-height: 42px;
+}
+
+.tab-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    background: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+}
+
+.tab-btn:hover {
+    color: #111827;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.tab-btn.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    background-color: white;
+}
+
+.tab-btn .tab-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.tab-btn:hover .tab-close,
+.tab-btn.active .tab-close {
+    opacity: 0.6;
+}
+
+.tab-btn .tab-close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    font-size: 10px;
+    font-weight: 600;
+    background-color: #e5e7eb;
+    color: #6b7280;
+}
+
+.tab-btn.active .tab-badge {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+/* Receipt preview body styling */
+#receipt-preview-body {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #111;
+    background: white;
+}
+
+/* View transitions */
+.view-section {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 0;
+}
+
+.view-section.active-view {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+/* Category Button active state overriding tailwind slightly */
+.category-btn.active {
+    background-color: #111827;
+    /* Tailwind primary */
+    color: white;
+    border-color: #111827;
+}
+
+/* To force remove number spinner arrows on modern browsers */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}

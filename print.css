@@ -1,0 +1,50 @@
+/* =========================
+   PRINT STYLES FOR RECEIPT
+========================= */
+@media print {
+
+    /* Hide everything except the receipt */
+    body> :not(#receipt-container) {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        color: black !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        /* standard thermal receipt width */
+        width: 80mm;
+        font-family: 'Courier New', Courier, monospace !important;
+    }
+
+    /* Override hidden class strictly for print */
+    #receipt-container {
+        display: block !important;
+        width: 100%;
+        padding: 4mm;
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        height: auto;
+        overflow: visible;
+    }
+
+    /* Print Specific Tweaks bypassing Tailwind */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        border-bottom: 1px dashed black;
+        padding-bottom: 4px;
+    }
+
+    td {
+        padding-top: 4px;
+        vertical-align: top;
+    }
+}
